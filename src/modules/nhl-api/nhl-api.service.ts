@@ -70,12 +70,12 @@ export class NhlApiService {
     );
     }
 
-  async fetchRecentGames(): Promise<Game[]> {
+  async fetchRecentGames(noOfDays: number): Promise<Game[]> {
       const today = new Date();
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(today.getDate() - 7);
+      const dayRange = new Date();
+      dayRange.setDate(today.getDate() - (noOfDays - 1));
 
-      const startDate = this.formatDate(sevenDaysAgo);
+      const startDate = this.formatDate(dayRange);
       const endDate = this.formatDate(today);
 
       const dtoResponse: NhlResponseDto[] = await this.fetchGames(startDate,endDate)
@@ -110,5 +110,50 @@ export class NhlApiService {
     return date.toISOString().split('T')[0];
   }
 
-  
+  async fetchLast30Days(): Promise<Game[]> {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    this.logger.log('Fetching last 30 days (in 7-day chunks)');
+
+    // Break into 7 day chunks
+    const allGames: Game[] = [];
+    let currentStart = new Date(thirtyDaysAgo);
+
+    while (currentStart < today) {
+      const currentEnd = new Date(currentStart);
+      currentEnd.setDate(currentEnd.getDate() + Constants.MAX_RANGE_FROM_API_IN_DAYS);
+
+      if (currentEnd > today) {
+        currentEnd.setTime(today.getTime());
+      }
+
+      const startDate = this.formatDate(currentStart);
+      const endDate = this.formatDate(currentEnd);
+
+      this.logger.log(`Fetching chunk: ${startDate} to ${endDate}`);
+
+      try {
+        const dtoResponse = await this.fetchGames(startDate, endDate);
+        const allGameDtos: NhlGameDto[] = dtoResponse.flatMap(
+      (dateGroup) => dateGroup.games,
+    );
+        const games = GameTransformer.toDomainBatch(allGameDtos);
+        allGames.push(...games);
+
+        this.logger.log(`Chunk complete: ${games.length} games`);
+      } catch (error) {
+        this.logger.error(`Chunk failed: ${error.message}`);
+      }
+
+      // MNext chunk
+      currentStart = new Date(currentEnd);
+      currentStart.setDate(currentStart.getDate() + 1);
+    }
+
+    this.logger.log(`Fetched ${allGames.length} games total (last 30 days)`);
+    return allGames;
+  }
+
 }

@@ -1,8 +1,13 @@
 import { Module } from '@nestjs/common';
+import { PubSubModule } from './modules/pubsub/pubsub.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 
 @Module({
-  imports: [],
+  imports: [
+    PubSubModule,
+    AdminModule
+  ],
   controllers: [],
   providers: [],
 })

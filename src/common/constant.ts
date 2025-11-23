@@ -7,5 +7,5 @@ BASE_URL: 'https://nhl-score-api.herokuapp.com/api/scores',
  API_TIMEOUT: 120000,
  MAX_RETRIES: 3,
  BATCH_SIZE: 100,
- MAX_RANGE_FROM_API_IN_DAYS: 7
+ MAX_RANGE_FROM_API_IN_DAYS: 2
 }
