@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { FirestoreService } from "../firestore/firestore.service";
 import { NhlApiService } from "../nhl-api/nhl-api.service";
+import { getFirestore } from "firebase-admin/firestore";
 
 @Injectable()
 export class AdminService {
@@ -24,5 +25,31 @@ export class AdminService {
       throw error;
     }
   }
+
+async testFirestoreWrite(gameId: string, gameData: any): Promise<void> {
+  const firestore = getFirestore();
+    await firestore.collection('games').doc(gameId).set(gameData);
+  
+  this.logger.log(`Successfully wrote test game: ${gameId}`);
+}
+
+async cleanupTestGames(): Promise<number> {
+  const firestore = getFirestore();
+  
+  const snapshot = await firestore
+    .collection('games')
+    .where('_testDocument', '==', true)
+    .get();
+  
+  const batch = firestore.batch();
+  snapshot.docs.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+  
+  await batch.commit();
+  
+  this.logger.log(`Deleted ${snapshot.size} test games`);
+  return snapshot.size;
+}
 
 }

@@ -71,4 +71,12 @@ npm test
 # Run tests with coverage
 npm run test:cov
 
+## Firestore Rule Testing
+
+Following endpoints can be used to test if NestJS is able to write to firestore while the Frontend (Flutter) can be tested directly from the playground.
+
+`[/admin/test-firestore-rules]` - It will publish data to firestore
+
+`[/admin/cleanup-test-games]` - It will delete test games / data
+
 
